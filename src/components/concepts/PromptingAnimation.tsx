@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Play, Check, X, Volume2, VolumeX, Pause } from "lucide-react";
-import { useNarration } from "@/hooks/useNarration";
+import { Sparkles, Play, Check, X, Pause } from "lucide-react";
 import FloatingDecorations from "@/components/ui/FloatingDecorations";
 
 const PromptingAnimation = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const { speak, stop, togglePause, isSpeaking, isPaused } = useNarration();
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   const techniques = [
     {
@@ -30,52 +31,59 @@ const PromptingAnimation = () => {
     },
   ];
 
-  const narrations = [
-    "Let's learn about prompting! This is the art of writing good instructions for AI.",
-    "Tip one: Be specific! Vague prompts give vague answers.",
-    "Tip two: Give examples! Show the AI what you want.",
-    "Tip three: Set the format! Tell the AI how to structure its response.",
-    "Good prompting means being specific, giving examples, and setting the format. Better prompts lead to better answers!",
-  ];
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
 
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
+  const runAnimation = useCallback((startStep: number = 0) => {
+    const delays = [1500, 1500, 1500, 1200, 1000];
+    let cumulativeDelay = 0;
+    
+    for (let i = startStep; i < 6; i++) {
+      const targetStep = i;
+      const stepDelay = i === startStep ? 0 : delays[Math.min(i - 1, delays.length - 1)];
+      cumulativeDelay += stepDelay;
+      
+      const timeout = setTimeout(() => {
+        setStep(targetStep);
+      }, cumulativeDelay);
+      
+      timeoutsRef.current.push(timeout);
+    }
+  }, []);
 
   const handleStart = () => {
     setIsStarted(true);
     setStep(0);
+    setIsPaused(false);
+    clearAllTimeouts();
     
-    speak(narrations[0], () => {
-      setTimeout(() => {
-        setStep(1);
-        speak(narrations[1], () => {
-          setTimeout(() => {
-            setStep(2);
-            speak(narrations[2], () => {
-              setTimeout(() => {
-                setStep(3);
-                speak(narrations[3], () => {
-                  setTimeout(() => {
-                    setStep(4);
-                    setTimeout(() => {
-                      setStep(5);
-                      speak(narrations[4]);
-                    }, 1000);
-                  }, 800);
-                });
-              }, 1500);
-            });
-          }, 1500);
-        });
-      }, 1500);
-    });
+    // Start animation with step 1 after initial delay
+    const timeout = setTimeout(() => {
+      setStep(1);
+      runAnimation(2);
+    }, 1200);
+    timeoutsRef.current.push(timeout);
+  };
+
+  const handlePause = () => {
+    if (!isPaused) {
+      // Pause: clear all pending timeouts
+      clearAllTimeouts();
+      setIsPaused(true);
+    } else {
+      // Resume: restart from current step
+      setIsPaused(false);
+      runAnimation(step + 1);
+    }
   };
 
   const handleReset = () => {
-    stop();
+    clearAllTimeouts();
     setIsStarted(false);
     setStep(0);
+    setIsPaused(false);
   };
 
   return (
@@ -102,33 +110,20 @@ const PromptingAnimation = () => {
               <Play className="w-4 h-4" />
               Learn Prompting
             </motion.button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={togglePause}
-                className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center hover:bg-accent/20 transition-colors"
-              >
-                {isPaused ? (
-                  <Play className="w-5 h-5 text-accent" />
-                ) : (
-                  <Pause className="w-5 h-5 text-accent" />
-                )}
-              </motion.button>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"
-              >
-                {isSpeaking && !isPaused ? (
-                  <Volume2 className="w-5 h-5 text-accent animate-pulse" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </motion.div>
-            </div>
-          )}
+          ) : step < 5 ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handlePause}
+              className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center hover:bg-accent/20 transition-colors"
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5 text-accent" />
+              ) : (
+                <Pause className="w-5 h-5 text-accent" />
+              )}
+            </motion.button>
+          ) : null}
         </div>
 
         <AnimatePresence mode="wait">
