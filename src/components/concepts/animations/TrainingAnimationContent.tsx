@@ -32,7 +32,7 @@ const TrainingAnimationContent = () => {
       });
       setLoss((prev) => Math.max(0.15, prev * 0.7));
       setAccuracy((prev) => Math.min(95, prev + Math.random() * 12 + 5));
-    }, 1600);
+    }, 3200);
   }, []);
 
   useEffect(() => {
