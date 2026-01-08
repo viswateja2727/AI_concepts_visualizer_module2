@@ -58,7 +58,7 @@ const ConceptModal = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] bg-card rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
+            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl max-h-[90vh] bg-card rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center gap-4 p-5 border-b border-border flex-shrink-0">
