@@ -6,6 +6,7 @@ const PromptingAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const techniques = [
     { name: "Be Specific", bad: "Write about dogs", good: "Write a 100-word paragraph about golden retrievers as family pets", icon: "🎯" },
@@ -53,6 +54,10 @@ const PromptingAnimationContent = () => {
 
   const isComplete = step >= 4;
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -99,6 +104,7 @@ const PromptingAnimationContent = () => {
           <p className="text-base text-foreground">✨ Good prompting = <strong>specific, formatted, with examples</strong>!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

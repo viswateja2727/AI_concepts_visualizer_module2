@@ -6,6 +6,7 @@ const LogitsAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const logits = [
     { word: "cat", value: 2.5, color: "bg-primary" },
@@ -53,6 +54,10 @@ const LogitsAnimationContent = () => {
   };
 
   const isComplete = step >= 4;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -110,6 +115,7 @@ const LogitsAnimationContent = () => {
           <p className="text-base text-foreground">📊 Logits are <strong>raw prediction scores</strong> before becoming probabilities!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

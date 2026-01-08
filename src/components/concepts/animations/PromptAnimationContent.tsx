@@ -6,6 +6,7 @@ const PromptAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const promptParts = [
     { type: "role", text: "You are a helpful assistant", color: "bg-primary" },
@@ -53,6 +54,10 @@ const PromptAnimationContent = () => {
 
   const isComplete = step >= 5;
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -99,6 +104,7 @@ const PromptAnimationContent = () => {
           <p className="text-base text-foreground">📝 A prompt is the <strong>starting point</strong> for AI. It sets the role, context, and task!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

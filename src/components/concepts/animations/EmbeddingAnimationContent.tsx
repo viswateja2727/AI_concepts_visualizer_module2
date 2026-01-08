@@ -87,6 +87,7 @@ const EmbeddingAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const words = [
     { word: "King", vector: [0.8, 0.2, 0.9], color: "bg-primary" },
@@ -133,6 +134,10 @@ const EmbeddingAnimationContent = () => {
   };
 
   const isComplete = step >= 4;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -185,6 +190,7 @@ const EmbeddingAnimationContent = () => {
           <p className="text-base text-foreground">🎯 Similar words are <strong>close together</strong> in vector space!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

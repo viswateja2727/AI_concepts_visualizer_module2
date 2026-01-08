@@ -6,6 +6,7 @@ const ContextAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const conversation = [
     { role: "user", text: "My name is Alex" },
@@ -54,6 +55,10 @@ const ContextAnimationContent = () => {
 
   const isComplete = step >= 6;
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -101,6 +106,7 @@ const ContextAnimationContent = () => {
           <p className="text-base text-foreground">💭 Context = <strong>all previous messages</strong> sent to the AI!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };
