@@ -19,7 +19,7 @@ const PromptingAnimationContent = () => {
   }, []);
 
   const runAnimation = useCallback((startStep: number = 1) => {
-    const delays = [3000, 3000, 3000, 2400];
+    const delays = [6000, 6000, 6000, 4800];
     let cumulativeDelay = 0;
 
     for (let i = startStep; i <= 4; i++) {
