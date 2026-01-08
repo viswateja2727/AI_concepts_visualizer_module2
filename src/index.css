@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --background: 200 60% 96%;
+    --foreground: 210 40% 15%;
+
+    --card: 200 50% 98%;
+    --card-foreground: 210 40% 15%;
+
+    --popover: 200 50% 98%;
+    --popover-foreground: 210 40% 15%;
+
+    --primary: 200 80% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 40% 90%;
+    --secondary-foreground: 210 40% 20%;
+
+    --muted: 200 30% 92%;
+    --muted-foreground: 210 20% 45%;
+
+    --accent: 340 75% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 150 60% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 40 90% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 30% 85%;
+    --input: 200 30% 85%;
+    --ring: 200 80% 50%;
+
+    --radius: 1rem;
+
+    /* Custom design tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(200 90% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(340 75% 55%) 0%, hsl(320 80% 45%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(150 60% 45%) 0%, hsl(170 70% 35%) 100%);
+    --gradient-background: linear-gradient(180deg, hsl(200 60% 96%) 0%, hsl(200 50% 92%) 100%);
+    
+    --shadow-soft: 0 4px 20px -4px hsl(200 80% 50% / 0.15);
+    --shadow-card: 0 8px 32px -8px hsl(200 80% 50% / 0.2);
+    --shadow-glow: 0 0 30px hsl(200 80% 50% / 0.3);
+
+    --font-display: 'Nunito', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+
+    --sidebar-background: 200 50% 98%;
+    --sidebar-foreground: 210 40% 20%;
+    --sidebar-primary: 200 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 40% 92%;
+    --sidebar-accent-foreground: 210 40% 20%;
+    --sidebar-border: 200 30% 85%;
+    --sidebar-ring: 200 80% 50%;
+  }
+
+  .dark {
+    --background: 210 50% 10%;
+    --foreground: 200 30% 95%;
+
+    --card: 210 45% 14%;
+    --card-foreground: 200 30% 95%;
+
+    --popover: 210 45% 14%;
+    --popover-foreground: 200 30% 95%;
+
+    --primary: 200 80% 55%;
+    --primary-foreground: 210 50% 10%;
+
+    --secondary: 210 40% 20%;
+    --secondary-foreground: 200 30% 90%;
+
+    --muted: 210 35% 18%;
+    --muted-foreground: 200 20% 60%;
+
+    --accent: 340 75% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 35% 22%;
+    --input: 210 35% 22%;
+    --ring: 200 80% 55%;
+
+    --sidebar-background: 210 45% 12%;
+    --sidebar-foreground: 200 30% 90%;
+    --sidebar-primary: 200 80% 55%;
+    --sidebar-primary-foreground: 210 50% 10%;
+    --sidebar-accent: 210 35% 18%;
+    --sidebar-accent-foreground: 200 30% 90%;
+    --sidebar-border: 210 35% 22%;
+    --sidebar-ring: 200 80% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-display;
+    font-family: var(--font-display);
+    background: var(--gradient-background);
+    min-height: 100vh;
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  .concept-card {
+    @apply bg-card rounded-2xl p-6 border border-border;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .concept-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .btn-start {
+    background: var(--gradient-primary);
+    @apply text-primary-foreground font-semibold px-6 py-3 rounded-xl;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-start:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .animation-container {
+    @apply bg-muted/50 rounded-xl p-6 min-h-[200px] flex items-center justify-center;
+    border: 2px dashed hsl(var(--border));
+  }
+}
