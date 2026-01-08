@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Layers, Play, Volume2, VolumeX, Pause, Zap } from "lucide-react";
-import { useNarration } from "@/hooks/useNarration";
+import { Layers, Play, Pause, Zap } from "lucide-react";
 import FloatingDecorations from "@/components/ui/FloatingDecorations";
 
 const TransformerAnimation = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [activeLayer, setActiveLayer] = useState(-1);
   const [showExample, setShowExample] = useState(false);
-  const { speak, stop, togglePause, isSpeaking, isPaused } = useNarration();
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   const inputText = "The cat sat";
   const tokens = ["The", "cat", "sat"];
@@ -58,58 +59,63 @@ const TransformerAnimation = () => {
     },
   ];
 
-  const narrations = [
-    "Let's explore transformer layers! Transformers are the building blocks of modern AI like ChatGPT.",
-    `We'll process the sentence: "${inputText}". Watch as it flows through each layer.`,
-    "First, the embedding layer converts each word into a list of numbers.",
-    "Now self-attention! Each word looks at other words to understand relationships. 'Cat' pays attention to 'The' and 'sat'.",
-    "The feed forward layer applies math transformations to refine the understanding.",
-    "Layer normalization keeps all numbers stable and balanced.",
-    "Another round of self-attention for deeper understanding!",
-    "More feed forward processing to combine everything we've learned.",
-    "Finally, the output layer predicts what word might come next! Data flowed through 7 layers. Real AI models have 32 to 128 layers!"
-  ];
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
 
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
+  const runAnimation = useCallback((startLayer: number = -1) => {
+    let cumulativeDelay = 0;
+    
+    for (let i = startLayer + 1; i < layers.length; i++) {
+      const targetLayer = i;
+      cumulativeDelay += 1500;
+      
+      const timeout = setTimeout(() => {
+        setActiveLayer(targetLayer);
+      }, cumulativeDelay);
+      
+      timeoutsRef.current.push(timeout);
+    }
+  }, [layers.length]);
 
   const handleStart = () => {
     setIsStarted(true);
     setActiveLayer(-1);
     setShowExample(false);
+    setIsPaused(false);
+    clearAllTimeouts();
     
-    speak(narrations[0], () => {
-      setTimeout(() => {
-        speak(narrations[1], () => {
-          setShowExample(true);
-          let current = -1;
-          
-          const processNextLayer = () => {
-            current++;
-            setActiveLayer(current);
-            
-            if (current < layers.length) {
-              setTimeout(() => {
-                speak(narrations[current + 2], () => {
-                  setTimeout(processNextLayer, 1500);
-                });
-              }, 800);
-            }
-          };
-          
-          setTimeout(processNextLayer, 1000);
-        });
-      }, 500);
-    });
+    const t1 = setTimeout(() => {
+      setShowExample(true);
+      const t2 = setTimeout(() => {
+        setActiveLayer(0);
+        runAnimation(0);
+      }, 1000);
+      timeoutsRef.current.push(t2);
+    }, 800);
+    timeoutsRef.current.push(t1);
+  };
+
+  const handlePause = () => {
+    if (!isPaused) {
+      clearAllTimeouts();
+      setIsPaused(true);
+    } else {
+      setIsPaused(false);
+      runAnimation(activeLayer);
+    }
   };
 
   const handleReset = () => {
-    stop();
+    clearAllTimeouts();
     setIsStarted(false);
     setActiveLayer(-1);
     setShowExample(false);
+    setIsPaused(false);
   };
+
+  const isAnimationComplete = activeLayer >= layers.length - 1;
 
   return (
     <motion.div 
@@ -138,33 +144,20 @@ const TransformerAnimation = () => {
               <Play className="w-4 h-4" />
               Start Processing
             </motion.button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={togglePause}
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
-              >
-                {isPaused ? (
-                  <Play className="w-5 h-5 text-primary" />
-                ) : (
-                  <Pause className="w-5 h-5 text-primary" />
-                )}
-              </motion.button>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
-              >
-                {isSpeaking && !isPaused ? (
-                  <Volume2 className="w-5 h-5 text-primary animate-pulse" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </motion.div>
-            </div>
-          )}
+          ) : !isAnimationComplete ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handlePause}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5 text-primary" />
+              ) : (
+                <Pause className="w-5 h-5 text-primary" />
+              )}
+            </motion.button>
+          ) : null}
         </div>
 
         <AnimatePresence mode="wait">
@@ -289,7 +282,7 @@ const TransformerAnimation = () => {
                 </div>
 
                 {/* Output */}
-                {activeLayer >= layers.length && (
+                {isAnimationComplete && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

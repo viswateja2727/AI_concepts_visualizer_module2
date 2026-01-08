@@ -1,78 +1,70 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Scissors, Play, Volume2, VolumeX, Pause } from "lucide-react";
-import { useNarration } from "@/hooks/useNarration";
+import { Scissors, Play, Pause } from "lucide-react";
 import FloatingDecorations from "@/components/ui/FloatingDecorations";
 
 const TokenAnimation = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const [animationPaused, setAnimationPaused] = useState(false);
-  const { speak, stop, togglePause, isSpeaking, isPaused } = useNarration();
-  const intervalRef = useState<NodeJS.Timeout | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   const sentence = "Hello, how are you today?";
   const tokens = ["Hello", ",", " how", " are", " you", " today", "?"];
 
-  const narrations = [
-    "Let's learn about tokens! Tokens are small pieces of text that AI can understand.",
-    "Here is our sentence: Hello, how are you today?",
-    "Now watch as we break it into tokens!",
-    "Each token is like a puzzle piece. The AI reads one piece at a time.",
-    "We created 7 tokens! AI processes text piece by piece, not as whole sentences."
-  ];
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
 
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
+  const runAnimation = useCallback((startStep: number = 0) => {
+    let cumulativeDelay = 0;
+    const totalSteps = tokens.length + 3; // step 1 (sentence), step 2 (tokenizing), steps 3-9 (tokens), step 10 (done)
+    
+    for (let i = startStep; i < totalSteps; i++) {
+      const targetStep = i;
+      cumulativeDelay += i < 3 ? 1000 : 500;
+      
+      const timeout = setTimeout(() => {
+        setStep(targetStep);
+      }, cumulativeDelay);
+      
+      timeoutsRef.current.push(timeout);
+    }
+  }, [tokens.length]);
 
   const handleStart = () => {
     setIsStarted(true);
-    setStep(0);
-    
-    speak(narrations[0], () => {
-      setTimeout(() => {
-        setStep(1);
-        speak(narrations[1], () => {
-          setTimeout(() => {
-            setStep(2);
-            speak(narrations[2]);
-            let tokenStep = 2;
-            const tokenInterval = setInterval(() => {
-              tokenStep++;
-              setStep(tokenStep);
-              if (tokenStep >= tokens.length + 2) {
-                clearInterval(tokenInterval);
-                setTimeout(() => {
-                  speak(narrations[4]);
-                }, 500);
-              }
-            }, 1500);
-          }, 1000);
-        });
-      }, 800);
-    });
+    setStep(1);
+    setIsPaused(false);
+    clearAllTimeouts();
+    runAnimation(2);
+  };
+
+  const handlePause = () => {
+    if (!isPaused) {
+      clearAllTimeouts();
+      setIsPaused(true);
+    } else {
+      setIsPaused(false);
+      runAnimation(step + 1);
+    }
   };
 
   const handleReset = () => {
-    stop();
+    clearAllTimeouts();
     setIsStarted(false);
     setStep(0);
-    setAnimationPaused(false);
+    setIsPaused(false);
   };
 
-  const handleTogglePause = () => {
-    togglePause();
-    setAnimationPaused(!animationPaused);
-  };
+  const isComplete = step >= tokens.length + 2;
 
   return (
     <motion.div 
       className="concept-card relative overflow-hidden"
       layout
-      animate={{ 
-        height: isStarted ? "auto" : "auto"
-      }}
     >
       <FloatingDecorations variant="mixed" count={6} />
       
@@ -96,33 +88,20 @@ const TokenAnimation = () => {
               <Play className="w-4 h-4" />
               Start Tokenizing
             </motion.button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={handleTogglePause}
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
-              >
-                {isPaused ? (
-                  <Play className="w-5 h-5 text-primary" />
-                ) : (
-                  <Pause className="w-5 h-5 text-primary" />
-                )}
-              </motion.button>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
-              >
-                {isSpeaking && !isPaused ? (
-                  <Volume2 className="w-5 h-5 text-primary animate-pulse" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </motion.div>
-            </div>
-          )}
+          ) : !isComplete ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handlePause}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5 text-primary" />
+              ) : (
+                <Pause className="w-5 h-5 text-primary" />
+              )}
+            </motion.button>
+          ) : null}
         </div>
 
         <AnimatePresence mode="wait">
@@ -188,7 +167,7 @@ const TokenAnimation = () => {
                 )}
 
                 {/* Explanation */}
-                {step >= tokens.length + 2 && (
+                {isComplete && (
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -201,7 +180,7 @@ const TokenAnimation = () => {
                   </motion.div>
                 )}
 
-                {step >= tokens.length + 2 && (
+                {isComplete && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
