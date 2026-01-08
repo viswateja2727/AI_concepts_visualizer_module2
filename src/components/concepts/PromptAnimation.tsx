@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Play, Volume2, VolumeX, Pause } from "lucide-react";
-import { useNarration } from "@/hooks/useNarration";
+import { MessageSquare, Play, Pause } from "lucide-react";
 import FloatingDecorations from "@/components/ui/FloatingDecorations";
 
 const PromptAnimation = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const { speak, stop, togglePause, isSpeaking, isPaused } = useNarration();
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const pausedAtRef = useRef<number | null>(null);
+  const remainingTimesRef = useRef<{ delay: number; action: () => void }[]>([]);
 
   const promptParts = [
     { type: "role", text: "You are a helpful assistant", color: "bg-primary" },
@@ -15,52 +18,74 @@ const PromptAnimation = () => {
     { type: "task", text: "Help me make pasta", color: "bg-success" },
   ];
 
-  const narrations = [
-    "Let's learn about prompts! A prompt is the instruction you give to an AI.",
-    "First, we define a role. This tells the AI who it should act like.",
-    "Next, we add context. This gives the AI specific knowledge to use.",
-    "Finally, we give a task. This is what we want the AI to do.",
-    "Together, these parts create a complete prompt that guides the AI!",
-  ];
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
 
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
+  const scheduleStep = useCallback((action: () => void, delay: number) => {
+    const timeout = setTimeout(() => {
+      action();
+    }, delay);
+    timeoutsRef.current.push(timeout);
+    return { delay, action };
+  }, []);
+
+  const runAnimation = useCallback((startStep: number = 0) => {
+    const delays = [1500, 1500, 1500, 1200, 1000];
+    let cumulativeDelay = 0;
+    
+    remainingTimesRef.current = [];
+    
+    for (let i = startStep; i < 6; i++) {
+      const targetStep = i;
+      const stepDelay = i === startStep ? 0 : delays[Math.min(i - 1, delays.length - 1)];
+      cumulativeDelay += stepDelay;
+      
+      const scheduled = scheduleStep(() => {
+        setStep(targetStep);
+      }, cumulativeDelay);
+      
+      remainingTimesRef.current.push(scheduled);
+    }
+    
+    pausedAtRef.current = Date.now();
+  }, [scheduleStep]);
 
   const handleStart = () => {
     setIsStarted(true);
     setStep(0);
+    setIsPaused(false);
+    clearAllTimeouts();
     
-    speak(narrations[0], () => {
-      setTimeout(() => {
-        setStep(1);
-        speak(narrations[1], () => {
-          setTimeout(() => {
-            setStep(2);
-            speak(narrations[2], () => {
-              setTimeout(() => {
-                setStep(3);
-                speak(narrations[3], () => {
-                  setTimeout(() => {
-                    setStep(4);
-                    setTimeout(() => {
-                      setStep(5);
-                      speak(narrations[4]);
-                    }, 1000);
-                  }, 800);
-                });
-              }, 1200);
-            });
-          }, 1200);
-        });
-      }, 1200);
-    });
+    // Start animation with step 1 after initial delay
+    const timeout = setTimeout(() => {
+      setStep(1);
+      runAnimation(2);
+    }, 1200);
+    timeoutsRef.current.push(timeout);
+    pausedAtRef.current = Date.now();
+  };
+
+  const handlePause = () => {
+    if (!isPaused) {
+      // Pause: clear all pending timeouts and save remaining times
+      clearAllTimeouts();
+      setIsPaused(true);
+    } else {
+      // Resume: restart from current step
+      setIsPaused(false);
+      runAnimation(step + 1);
+    }
   };
 
   const handleReset = () => {
-    stop();
+    clearAllTimeouts();
     setIsStarted(false);
     setStep(0);
+    setIsPaused(false);
+    remainingTimesRef.current = [];
+    pausedAtRef.current = null;
   };
 
   return (
@@ -87,33 +112,20 @@ const PromptAnimation = () => {
               <Play className="w-4 h-4" />
               Show Prompt
             </motion.button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={togglePause}
-                className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"
-              >
-                {isPaused ? (
-                  <Play className="w-5 h-5 text-success" />
-                ) : (
-                  <Pause className="w-5 h-5 text-success" />
-                )}
-              </motion.button>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center"
-              >
-                {isSpeaking && !isPaused ? (
-                  <Volume2 className="w-5 h-5 text-success animate-pulse" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </motion.div>
-            </div>
-          )}
+          ) : step < 5 ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handlePause}
+              className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5 text-success" />
+              ) : (
+                <Pause className="w-5 h-5 text-success" />
+              )}
+            </motion.button>
+          ) : null}
         </div>
 
         <AnimatePresence mode="wait">
