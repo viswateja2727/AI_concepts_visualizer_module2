@@ -20,7 +20,7 @@ const LogitsAnimationContent = () => {
   }, []);
 
   const runAnimation = useCallback((startStep: number = 1) => {
-    const delays = [1400, 1800, 1800, 2000];
+    const delays = [1600, 2000, 2000, 2400];
     let cumulativeDelay = 0;
 
     for (let i = startStep; i <= 4; i++) {

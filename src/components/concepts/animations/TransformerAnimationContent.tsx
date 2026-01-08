@@ -15,7 +15,7 @@ const TransformerAnimationContent = () => {
   }, []);
 
   const runAnimation = useCallback((startStep: number = 1) => {
-    const delays = [1400, 2000, 2500, 2000, 1800];
+    const delays = [1600, 2400, 3000, 2400, 2000];
     let cumulativeDelay = 0;
 
     for (let i = startStep; i <= 5; i++) {

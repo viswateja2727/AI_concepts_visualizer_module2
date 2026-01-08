@@ -22,7 +22,7 @@ const TokenAnimationContent = () => {
 
       for (let i = startStep; i < totalSteps; i++) {
         const targetStep = i;
-        cumulativeDelay += i < 3 ? 1800 : 900;
+        cumulativeDelay += i < 3 ? 2000 : 1000;
 
         const timeout = setTimeout(() => {
           setStep(targetStep);
