@@ -6,6 +6,7 @@ const SoftmaxAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const data = [
     { word: "cat", logit: 2.5, probability: 0.65 },
@@ -53,6 +54,10 @@ const SoftmaxAnimationContent = () => {
   };
 
   const isComplete = step >= 4;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -122,6 +127,7 @@ const SoftmaxAnimationContent = () => {
           <p className="text-base text-foreground">🔢 Softmax converts logits into <strong>probabilities that sum to 100%</strong>!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

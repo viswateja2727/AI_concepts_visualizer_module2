@@ -8,6 +8,7 @@ const TrainingAnimationContent = () => {
   const [accuracy, setAccuracy] = useState(10);
   const [isComplete, setIsComplete] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const examples = [
     { input: "The sky is", target: "blue" },
@@ -46,6 +47,10 @@ const TrainingAnimationContent = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     runTraining();
   };
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [epoch, isComplete]);
 
   return (
     <div className="space-y-6">
@@ -111,6 +116,7 @@ const TrainingAnimationContent = () => {
           <p className="text-base text-foreground">🎓 <strong>Training complete!</strong> The model learned patterns from data.</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

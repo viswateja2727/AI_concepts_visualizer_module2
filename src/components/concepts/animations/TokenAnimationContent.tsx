@@ -6,6 +6,7 @@ const TokenAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const sentence = "Hello, how are you today?";
   const tokens = ["Hello", ",", " how", " are", " you", " today", "?"];
@@ -59,6 +60,10 @@ const TokenAnimationContent = () => {
   };
 
   const isComplete = step >= tokens.length + 2;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -148,6 +153,7 @@ const TokenAnimationContent = () => {
           </p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

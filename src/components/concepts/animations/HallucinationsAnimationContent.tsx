@@ -6,6 +6,7 @@ const HallucinationsAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const examples = [{ question: "Who invented the telephone?", correct: "Alexander Graham Bell in 1876", hallucinated: "Thomas Edison invented it in 1890" }];
 
@@ -48,6 +49,10 @@ const HallucinationsAnimationContent = () => {
   };
 
   const isComplete = step >= 6;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -123,6 +128,7 @@ const HallucinationsAnimationContent = () => {
           <p className="text-base text-foreground">👻 Hallucinations are <strong>confident but wrong</strong> outputs!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

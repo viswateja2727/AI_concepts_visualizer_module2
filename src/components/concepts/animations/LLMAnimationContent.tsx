@@ -7,6 +7,7 @@ const LLMAnimationContent = () => {
   const [displayedText, setDisplayedText] = useState("");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const inputPrompt = "The capital of France is";
   const generatedWords = ["Paris", ".", " It", " is", " known", " for", " the", " Eiffel", " Tower", "."];
@@ -53,6 +54,10 @@ const LLMAnimationContent = () => {
 
   const handleReset = () => runAnimation();
   const isComplete = step >= generatedWords.length + 4;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -115,6 +120,7 @@ const LLMAnimationContent = () => {
           <p className="text-base text-foreground">🤖 LLMs predict <strong>one token at a time</strong> based on all previous tokens!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

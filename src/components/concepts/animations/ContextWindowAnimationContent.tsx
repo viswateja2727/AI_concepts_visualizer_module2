@@ -6,6 +6,7 @@ const ContextWindowAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [tokens, setTokens] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const maxTokens = 16;
   const allTokens = ["Hello", ",", " I", " am", " writing", " a", " very", " long", " message", " to", " demonstrate", " the", " context", " window", " limit", " here", " but", " this", " will", " be", " cut", " off", "!"];
@@ -39,6 +40,10 @@ const ContextWindowAnimationContent = () => {
 
   const handleReset = () => runAnimation();
   const isComplete = step >= 2;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [tokens.length, step]);
 
   return (
     <div className="space-y-6">
@@ -103,6 +108,7 @@ const ContextWindowAnimationContent = () => {
           <p className="text-base text-foreground">📏 Real LLMs have context windows of <strong>4K-128K+ tokens</strong>!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };

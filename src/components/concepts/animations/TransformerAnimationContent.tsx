@@ -6,6 +6,7 @@ const TransformerAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const tokens = ["The", "cat", "sat", "on", "the", "mat"];
 
@@ -48,6 +49,10 @@ const TransformerAnimationContent = () => {
   };
 
   const isComplete = step >= 5;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [step]);
 
   return (
     <div className="space-y-6">
@@ -122,6 +127,7 @@ const TransformerAnimationContent = () => {
           <p className="text-base text-foreground">🔄 Transformers use <strong>self-attention</strong> to understand word relationships!</p>
         </motion.div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 };
