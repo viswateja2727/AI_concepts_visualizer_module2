@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Play, Volume2, VolumeX, Pause, Brain, Calculator } from "lucide-react";
-import { useNarration } from "@/hooks/useNarration";
+import { BarChart3, Play, Pause, Brain, Calculator } from "lucide-react";
 import FloatingDecorations from "@/components/ui/FloatingDecorations";
 
 const LogitsAnimation = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const { speak, stop, togglePause, isSpeaking, isPaused } = useNarration();
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   const neuronWeights = [
     { word: "sunny", weights: [0.9, 0.8, 0.7], bias: 0.5, result: 3.2 },
@@ -18,52 +19,54 @@ const LogitsAnimation = () => {
 
   const inputFeatures = ["temperature", "humidity", "pressure"];
 
-  const narrations = [
-    "Let's understand logits! Logits are raw scores that come from the neural network before they become probabilities.",
-    "Imagine we're predicting the next word after 'The weather today is'. The AI looks at patterns it learned.",
-    "The AI uses weights and biases for each possible word. Weights show how important each input feature is.",
-    "Let me show you how the score for 'sunny' is calculated. We multiply inputs by weights and add the bias!",
-    "Higher scores mean the AI is more confident. Notice how 'sunny' has the highest score of 3.2! Negative scores like 'stormy' mean the AI thinks it's unlikely."
-  ];
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
 
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
+  const runAnimation = useCallback((startStep: number = 0) => {
+    const delays = [1000, 1500, 2000, 2000];
+    let cumulativeDelay = 0;
+    
+    for (let i = startStep; i < 5; i++) {
+      const targetStep = i;
+      cumulativeDelay += delays[Math.min(i - 1, delays.length - 1)] || 1000;
+      
+      const timeout = setTimeout(() => {
+        setStep(targetStep);
+      }, cumulativeDelay);
+      
+      timeoutsRef.current.push(timeout);
+    }
+  }, []);
 
   const handleStart = () => {
     setIsStarted(true);
-    setStep(0);
-    
-    speak(narrations[0], () => {
-      setTimeout(() => {
-        setStep(1);
-        speak(narrations[1], () => {
-          setTimeout(() => {
-            setStep(2);
-            speak(narrations[2], () => {
-              setTimeout(() => {
-                setStep(3);
-                speak(narrations[3], () => {
-                  setTimeout(() => {
-                    setStep(4);
-                    speak(narrations[4]);
-                  }, 2000);
-                });
-              }, 2000);
-            });
-          }, 1500);
-        });
-      }, 1000);
-    });
+    setStep(1);
+    setIsPaused(false);
+    clearAllTimeouts();
+    runAnimation(2);
+  };
+
+  const handlePause = () => {
+    if (!isPaused) {
+      clearAllTimeouts();
+      setIsPaused(true);
+    } else {
+      setIsPaused(false);
+      runAnimation(step + 1);
+    }
   };
 
   const handleReset = () => {
-    stop();
+    clearAllTimeouts();
     setIsStarted(false);
     setStep(0);
+    setIsPaused(false);
   };
 
   const maxLogit = Math.max(...neuronWeights.map((l) => l.result));
+  const isComplete = step >= 4;
 
   return (
     <motion.div 
@@ -92,33 +95,20 @@ const LogitsAnimation = () => {
               <Play className="w-4 h-4" />
               Show Logits
             </motion.button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={togglePause}
-                className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center hover:bg-warning/20 transition-colors"
-              >
-                {isPaused ? (
-                  <Play className="w-5 h-5 text-warning" />
-                ) : (
-                  <Pause className="w-5 h-5 text-warning" />
-                )}
-              </motion.button>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center"
-              >
-                {isSpeaking && !isPaused ? (
-                  <Volume2 className="w-5 h-5 text-warning animate-pulse" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </motion.div>
-            </div>
-          )}
+          ) : !isComplete ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handlePause}
+              className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center hover:bg-warning/20 transition-colors"
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5 text-warning" />
+              ) : (
+                <Pause className="w-5 h-5 text-warning" />
+              )}
+            </motion.button>
+          ) : null}
         </div>
 
         <AnimatePresence mode="wait">

@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Percent, Play, ArrowRight, Volume2, VolumeX, Pause } from "lucide-react";
-import { useNarration } from "@/hooks/useNarration";
+import { Percent, Play, ArrowRight, Pause } from "lucide-react";
 import FloatingDecorations from "@/components/ui/FloatingDecorations";
 
 const SoftmaxAnimation = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const { speak, stop, togglePause, isSpeaking, isPaused } = useNarration();
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   const data = [
     { word: "sunny", logit: 3.2, probability: 0.58 },
@@ -16,50 +17,53 @@ const SoftmaxAnimation = () => {
     { word: "stormy", logit: -0.5, probability: 0.01 },
   ];
 
-  const narrations = [
-    "Now let's learn about softmax! Softmax is a special function that converts raw scores into probabilities.",
-    "Here's the softmax formula. It uses the mathematical constant e, which is about 2.718. Let's see it in action!",
-    "On the left we have our logit scores. Softmax will transform them into percentages that add up to 100%.",
-    "Watch the magic happen! Each score becomes a probability. Higher scores get bigger percentages!",
-    "Now all probabilities add up to exactly 100%! The AI can use these to pick the most likely word, or sample randomly based on these chances."
-  ];
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
 
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
+  const runAnimation = useCallback((startStep: number = 0) => {
+    const delays = [1000, 1500, 2000, 2000];
+    let cumulativeDelay = 0;
+    
+    for (let i = startStep; i < 5; i++) {
+      const targetStep = i;
+      cumulativeDelay += delays[Math.min(i - 1, delays.length - 1)] || 1000;
+      
+      const timeout = setTimeout(() => {
+        setStep(targetStep);
+      }, cumulativeDelay);
+      
+      timeoutsRef.current.push(timeout);
+    }
+  }, []);
 
   const handleStart = () => {
     setIsStarted(true);
-    setStep(0);
-    
-    speak(narrations[0], () => {
-      setTimeout(() => {
-        setStep(1);
-        speak(narrations[1], () => {
-          setTimeout(() => {
-            setStep(2);
-            speak(narrations[2], () => {
-              setTimeout(() => {
-                setStep(3);
-                speak(narrations[3], () => {
-                  setTimeout(() => {
-                    setStep(4);
-                    speak(narrations[4]);
-                  }, 2000);
-                });
-              }, 2000);
-            });
-          }, 1500);
-        });
-      }, 1000);
-    });
+    setStep(1);
+    setIsPaused(false);
+    clearAllTimeouts();
+    runAnimation(2);
+  };
+
+  const handlePause = () => {
+    if (!isPaused) {
+      clearAllTimeouts();
+      setIsPaused(true);
+    } else {
+      setIsPaused(false);
+      runAnimation(step + 1);
+    }
   };
 
   const handleReset = () => {
-    stop();
+    clearAllTimeouts();
     setIsStarted(false);
     setStep(0);
+    setIsPaused(false);
   };
+
+  const isComplete = step >= 4;
 
   return (
     <motion.div 
@@ -88,33 +92,20 @@ const SoftmaxAnimation = () => {
               <Play className="w-4 h-4" />
               Apply Softmax
             </motion.button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={togglePause}
-                className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"
-              >
-                {isPaused ? (
-                  <Play className="w-5 h-5 text-success" />
-                ) : (
-                  <Pause className="w-5 h-5 text-success" />
-                )}
-              </motion.button>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center"
-              >
-                {isSpeaking && !isPaused ? (
-                  <Volume2 className="w-5 h-5 text-success animate-pulse" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </motion.div>
-            </div>
-          )}
+          ) : !isComplete ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handlePause}
+              className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5 text-success" />
+              ) : (
+                <Pause className="w-5 h-5 text-success" />
+              )}
+            </motion.button>
+          ) : null}
         </div>
 
         <AnimatePresence mode="wait">
