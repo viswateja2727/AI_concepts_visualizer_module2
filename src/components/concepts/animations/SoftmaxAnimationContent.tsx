@@ -20,7 +20,7 @@ const SoftmaxAnimationContent = () => {
   }, []);
 
   const runAnimation = useCallback((startStep: number = 1) => {
-    const delays = [800, 1200, 1200, 1000];
+    const delays = [1400, 2000, 2000, 1800];
     let cumulativeDelay = 0;
 
     for (let i = startStep; i <= 4; i++) {

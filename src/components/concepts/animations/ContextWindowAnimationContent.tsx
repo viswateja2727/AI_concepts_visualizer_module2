@@ -29,7 +29,7 @@ const ContextWindowAnimationContent = () => {
         setStep(2);
         if (intervalRef.current) clearInterval(intervalRef.current);
       }
-    }, 400);
+    }, 700);
   }, [clearAll, allTokens.length, maxTokens]);
 
   useEffect(() => {

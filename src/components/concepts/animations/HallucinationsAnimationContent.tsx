@@ -15,7 +15,7 @@ const HallucinationsAnimationContent = () => {
   }, []);
 
   const runAnimation = useCallback((startStep: number = 1) => {
-    const delays = [500, 1000, 1000, 1000, 1000, 1000];
+    const delays = [900, 1800, 1800, 1800, 1800, 1800];
     let cumulativeDelay = 0;
 
     for (let i = startStep; i <= 6; i++) {
