@@ -38,8 +38,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI TTS API error:", errorText);
-      throw new Error(`OpenAI TTS API error: ${response.status}`);
+      console.error("TTS API error:", response.status, errorText);
+      throw new Error("Unable to generate audio");
     }
 
     const audioBuffer = await response.arrayBuffer();
@@ -52,9 +52,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("TTS Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Unable to process request" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
