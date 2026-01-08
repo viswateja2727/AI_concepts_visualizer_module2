@@ -100,7 +100,7 @@ const EmbeddingAnimationContent = () => {
   }, []);
 
   const runAnimation = useCallback((startStep: number = 1) => {
-    const delays = [900, 1800, 1800, 1800];
+    const delays = [1000, 2000, 2000, 2000];
     let cumulativeDelay = 0;
 
     for (let i = startStep; i <= 4; i++) {

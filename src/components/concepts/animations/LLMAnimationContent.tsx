@@ -22,7 +22,7 @@ const LLMAnimationContent = () => {
     setStep(0);
     setDisplayedText("");
 
-    const t1 = setTimeout(() => setStep(1), 1400);
+    const t1 = setTimeout(() => setStep(1), 1600);
     const t2 = setTimeout(() => {
       setStep(2);
       let currentStep = 2;
@@ -32,8 +32,8 @@ const LLMAnimationContent = () => {
         if (currentStep >= generatedWords.length + 4) {
           if (intervalRef.current) clearInterval(intervalRef.current);
         }
-      }, 1000);
-    }, 3000);
+      }, 1200);
+    }, 3600);
 
     timeoutsRef.current = [t1, t2];
   }, [clearAll, generatedWords.length]);
