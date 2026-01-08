@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Brain, RotateCcw } from "lucide-react";
 
@@ -8,20 +8,25 @@ const LLMAnimationContent = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const appendedWordsRef = useRef<Set<number>>(new Set());
 
   const inputPrompt = "The capital of France is";
   const generatedWords = ["Paris", ".", " It", " is", " known", " for", " the", " Eiffel", " Tower", "."];
 
-  const clearAll = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+  const clearAll = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     timeoutsRef.current.forEach(clearTimeout);
     timeoutsRef.current = [];
-  }, []);
+  };
 
-  const runAnimation = useCallback(() => {
+  const runAnimation = () => {
     clearAll();
     setStep(0);
     setDisplayedText("");
+    appendedWordsRef.current = new Set();
 
     const t1 = setTimeout(() => setStep(1), 3200);
     const t2 = setTimeout(() => {
@@ -29,28 +34,33 @@ const LLMAnimationContent = () => {
       let currentStep = 2;
       intervalRef.current = setInterval(() => {
         currentStep++;
-        setStep(currentStep);
         if (currentStep >= generatedWords.length + 4) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
         }
+        setStep(currentStep);
       }, 2400);
     }, 7200);
 
     timeoutsRef.current = [t1, t2];
-  }, [clearAll, generatedWords.length]);
+  };
 
   useEffect(() => {
     runAnimation();
     return () => clearAll();
-  }, [runAnimation, clearAll]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (step < 3) return;
     const wordIndex = step - 3;
-    if (wordIndex < generatedWords.length) {
+    if (wordIndex < generatedWords.length && !appendedWordsRef.current.has(wordIndex)) {
+      appendedWordsRef.current.add(wordIndex);
       setDisplayedText((prev) => prev + generatedWords[wordIndex]);
     }
-  }, [step, generatedWords]);
+  }, [step]);
 
   const handleReset = () => runAnimation();
   const isComplete = step >= generatedWords.length + 4;
