@@ -1,17 +1,30 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Brain, RotateCcw } from "lucide-react";
+import { Brain, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 const LLMAnimationContent = () => {
   const [step, setStep] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const appendedWordsRef = useRef<Set<number>>(new Set());
+  const spokenStepsRef = useRef<Set<number>>(new Set());
+
+  const { speak, stop } = useSpeechSynthesis({ rate: 0.9, pitch: 1.1 });
 
   const inputPrompt = "The capital of France is";
   const generatedWords = ["Paris", ".", " It", " is", " known", " for", " the", " Eiffel", " Tower", "."];
+
+  const narration: Record<number, string> = {
+    0: "Let's see how a Large Language Model generates text.",
+    1: "First, we provide an input prompt: The capital of France is.",
+    2: "The LLM processes this input through billions of parameters.",
+    3: "Now watch as it predicts one token at a time.",
+    [generatedWords.length + 4]: "Amazing! LLMs predict one token at a time based on all previous tokens.",
+  };
 
   const clearAll = () => {
     if (intervalRef.current) {
@@ -24,9 +37,11 @@ const LLMAnimationContent = () => {
 
   const runAnimation = () => {
     clearAll();
+    stop();
     setStep(0);
     setDisplayedText("");
     appendedWordsRef.current = new Set();
+    spokenStepsRef.current = new Set();
 
     const t1 = setTimeout(() => setStep(1), 3200);
     const t2 = setTimeout(() => {
@@ -49,7 +64,10 @@ const LLMAnimationContent = () => {
 
   useEffect(() => {
     runAnimation();
-    return () => clearAll();
+    return () => {
+      clearAll();
+      stop();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -62,6 +80,18 @@ const LLMAnimationContent = () => {
     }
   }, [step]);
 
+  // Narration effect
+  useEffect(() => {
+    if (!audioEnabled) return;
+    if (spokenStepsRef.current.has(step)) return;
+    
+    const text = narration[step];
+    if (text) {
+      spokenStepsRef.current.add(step);
+      speak(text);
+    }
+  }, [step, audioEnabled, speak]);
+
   const handleReset = () => runAnimation();
   const isComplete = step >= generatedWords.length + 4;
 
@@ -69,12 +99,22 @@ const LLMAnimationContent = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [step]);
 
+  const toggleAudio = () => {
+    if (audioEnabled) {
+      stop();
+    }
+    setAudioEnabled(!audioEnabled);
+  };
+
   return (
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex justify-center gap-2">
         <button onClick={handleReset} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
           <RotateCcw className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <button onClick={toggleAudio} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+          {audioEnabled ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
         </button>
       </div>
 
