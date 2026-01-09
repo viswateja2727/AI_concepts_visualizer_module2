@@ -14,6 +14,9 @@ const LLMAnimationContent = () => {
   const generatedWords = ["Paris", ".", " It", " is", " known", " for", " the", " Eiffel", " Tower", "."];
 
   const clearAll = () => {
+    // Ensure any previously-started browser TTS is fully stopped
+    window.speechSynthesis?.cancel();
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
