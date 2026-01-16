@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**URL**: [Gen AI Concepts Visualization](https://ai-concepts-visualizer-module2.vercel.app/) (click here to play)
 
 ## How can I edit this code?
 
